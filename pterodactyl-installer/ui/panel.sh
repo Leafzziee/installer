@@ -6,7 +6,7 @@ set -e
 #                                                                                    #
 # Project 'pterodactyl-installer'                                                    #
 #                                                                                    #
-# Copyright (C) 2018 - 2024, Vilhelm Prytz, <vilhelm@prytznet.se>                    #
+# Copyright (C) 2018 - 2024, RiiSTORE ID                                             #
 #                                                                                    #
 #   This program is free software: you can redistribute it and/or modify             #
 #   it under the terms of the GNU General Public License as published by             #
@@ -103,8 +103,8 @@ check_FQDN_SSL() {
 main() {
   # check if we can detect an already existing installation
   if [ -d "/var/www/pterodactyl" ]; then
-    warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
-    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    warning "Panel Sudah Tersedia Apakah Kamu Ingin Menginstall lagi? Ini Bisa Gagal!"
+    echo -e -n "* Apakah Kamu Ingin Melanjutkan? (y/N): "
     read -r CONFIRM_PROCEED
     if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
       error "Installation aborted!"
@@ -126,47 +126,47 @@ main() {
 
   MYSQL_DB="-"
   while [[ "$MYSQL_DB" == *"-"* ]]; do
-    required_input MYSQL_DB "Database name (panel): " "" "panel"
+    required_input MYSQL_DB "Nama Database: " "" "panel"
     [[ "$MYSQL_DB" == *"-"* ]] && error "Database name cannot contain hyphens"
   done
 
   MYSQL_USER="-"
   while [[ "$MYSQL_USER" == *"-"* ]]; do
-    required_input MYSQL_USER "Database username (pterodactyl): " "" "pterodactyl"
+    required_input MYSQL_USER "Database Username: " "" "pterodactyl"
     [[ "$MYSQL_USER" == *"-"* ]] && error "Database user cannot contain hyphens"
   done
 
   # MySQL password input
   rand_pw=$(gen_passwd 64)
-  password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
+  password_input MYSQL_PASSWORD "Password : " "MySQL password cannot be empty" "$rand_pw"
 
   readarray -t valid_timezones <<<"$(curl -s "$GITHUB_URL"/configs/valid_timezones.txt)"
   output "List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
   while [ -z "$timezone" ]; do
-    echo -n "* Select timezone [Europe/Stockholm]: "
+    echo -n "* Pilih Zona Waktu [Asia/Jakarta]: "
     read -r timezone_input
 
     array_contains_element "$timezone_input" "${valid_timezones[@]}" && timezone="$timezone_input"
-    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
+    [ -z "$timezone_input" ] && timezone="Asia/Jakarta" # because köttbullar!
   done
 
-  email_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty or invalid"
+  email_input email "Masukan Email Panel : ( Pake Apa aja Yang Penting wajib di isi)"
 
   # Initial admin account
-  email_input user_email "Email address for the initial admin account: " "Email cannot be empty or invalid"
-  required_input user_username "Username for the initial admin account: " "Username cannot be empty"
-  required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
-  required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
-  password_input user_password "Password for the initial admin account: " "Password cannot be empty"
+  email_input user_email "Konfirmasi Email Panel Yang Tadi Anda Bikin :"
+  required_input user_username "Masukan Nama Buat Akun Panel"
+  required_input user_firstname "Masukan Nama Pertama Buat Akun Panel"
+  required_input user_lastname "Masukan Nama Akhir Buat Akun Panel"
+  password_input user_password "Masukan Password Buat Akun Panel"
 
   print_brake 72
 
   # set FQDN
   while [ -z "$FQDN" ]; do
-    echo -n "* Set the FQDN of this panel (panel.example.com): "
+    echo -n "* Masukan Domain Yang Telah Di Buat : contoh (panel.my.id) "
     read -r FQDN
-    [ -z "$FQDN" ] && error "FQDN cannot be empty"
+    [ -z "$FQDN" ] && error "Domain Tidak Boleh Kosong"
   done
 
   # Check if SSL is available
@@ -190,12 +190,12 @@ main() {
   summary
 
   # confirm installation
-  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
+  echo -e -n "\n* Konfigurasi awal selesai. Lanjutkan dengan instalasi? (y/N): "
   read -r CONFIRM
   if [[ "$CONFIRM" =~ [Yy] ]]; then
     run_installer "panel"
   else
-    error "Installation aborted."
+    error "Installasi Gagal."
     exit 1
   fi
 }
@@ -203,17 +203,17 @@ main() {
 summary() {
   print_brake 62
   output "Pterodactyl panel $PTERODACTYL_PANEL_VERSION with nginx on $OS"
-  output "Database name: $MYSQL_DB"
-  output "Database user: $MYSQL_USER"
-  output "Database password: (censored)"
-  output "Timezone: $timezone"
+  output "Nama Database: $MYSQL_DB"
+  output "Username Database: $MYSQL_USER"
+  output "Password Database: (censored)"
+  output "Zona Waktu: $timezone"
   output "Email: $email"
   output "User email: $user_email"
   output "Username: $user_username"
-  output "First name: $user_firstname"
-  output "Last name: $user_lastname"
-  output "User password: (censored)"
-  output "Hostname/FQDN: $FQDN"
+  output "Nama Awal: $user_firstname"
+  output "Nama Akhir: $user_lastname"
+  output "Password: (censored)"
+  output "Domain: $FQDN"
   output "Configure Firewall? $CONFIGURE_FIREWALL"
   output "Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
   output "Assume SSL? $ASSUME_SSL"
@@ -222,7 +222,7 @@ summary() {
 
 goodbye() {
   print_brake 62
-  output "Panel installation completed"
+  output "Install Panel Selesai"
   output ""
 
   [ "$CONFIGURE_LETSENCRYPT" == true ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
@@ -230,8 +230,8 @@ goodbye() {
   [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
 
   output ""
-  output "Installation is using nginx on $OS"
-  output "Thank you for using this script."
+  output "Instalasi Menggunakan Nginx $OS"
+  output "Terima Kasih Telah Menggunakan Script Ini."
   [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
 }
